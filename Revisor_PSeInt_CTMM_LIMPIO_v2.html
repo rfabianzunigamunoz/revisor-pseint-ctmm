@@ -1,0 +1,784 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Revisor PSeInt – Docente (CTMM) – limpio v2</title>
+<style>
+  body{font-family:Arial,Helvetica,sans-serif;margin:16px;line-height:1.25}
+  h1{margin:0 0 6px}
+  .sub{color:#444;font-size:12px;margin:0 0 12px}
+  .bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:10px 0}
+  input[type=text]{padding:6px 8px;min-width:320px}
+  button{padding:7px 10px;cursor:pointer}
+  table{width:100%;border-collapse:collapse;margin-top:10px}
+  th,td{border:1px solid #ddd;vertical-align:top;padding:8px}
+  th{background:#f6f6f6;text-align:left}
+  textarea{width:100%;min-height:160px;font-family:Consolas,monospace;font-size:12px}
+  .enun{white-space:pre-wrap;background:#fafafa;border:1px solid #eee;border-radius:10px;padding:8px;font-size:12px}
+  .res{white-space:pre-wrap;font-family:Consolas,monospace;font-size:12px}
+  .grade{font-weight:800;font-size:18px;text-align:center}
+  .muted{color:#666}
+  .rowbtn{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+  .panel{border:1px solid #ddd;border-radius:12px;padding:10px;margin-top:12px}
+  .grid{display:grid;grid-template-columns:1.35fr 1fr;gap:12px;margin-top:12px}
+  .pill{display:inline-block;border:1px solid #ddd;border-radius:999px;padding:2px 8px;font-weight:700;font-size:12px}
+  .pill.na{border-style:dashed;color:#666}
+  .banner{border:1px dashed #bbb;border-radius:12px;padding:8px;background:#fcfcfc;margin:10px 0;font-size:12px}
+  .ok{color:#0a6}.warn{color:#a60}.bad{color:#c00}
+</style>
+</head>
+<body>
+
+<h1>Revisor PSeInt – Docente (CTMM) – limpio v2</h1>
+<p class="sub">
+Tolerante a espacios/indentación y a <b>Mostrar o Escribir</b>.<br/>
+Regla clave: antes de cada <b>Leer</b> debe haber un <b>Mostrar/Escribir</b> inmediatamente anterior con el texto que incluya <b>“y presione ENTER:”</b> y termine en <b>:</b>.
+</p>
+
+<div id="storageBanner" class="banner" style="display:none"></div>
+
+<div class="bar">
+  <b>Grupo / Pareja:</b>
+  <input id="grupo" type="text" placeholder="Ej: Grupo 04 – Laura y David"/>
+  <button id="btnRevisarTodo" type="button">Revisar TODO</button>
+  <button id="btnGuardarGrupo" type="button">Guardar grupo</button>
+  <button id="btnPDFActual" type="button">PDF (imprimir 1 hoja)</button>
+  <button id="btnLimpiar" type="button">Limpiar</button>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width:34%">Enunciado (fijo con vacíos)</th>
+      <th style="width:30%">Código PSeInt (pegar)</th>
+      <th style="width:26%">Resultado revisión</th>
+      <th style="width:10%">Nota</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr data-ej="1">
+      <td><b>Ejercicio 1</b><div class="enun" id="en1"></div></td>
+      <td>
+        <textarea class="code" placeholder="Pegue aquí el código PSeInt del Ejercicio 1..."></textarea>
+        <div class="rowbtn">
+          <button class="btnRevFila" type="button">Revisar fila</button>
+          <button class="btnCopiarRes" type="button">Copiar resultado</button>
+        </div>
+      </td>
+      <td><div class="res result"></div></td>
+      <td class="grade">—</td>
+    </tr>
+    <tr data-ej="2">
+      <td><b>Ejercicio 2</b><div class="enun" id="en2"></div></td>
+      <td>
+        <textarea class="code" placeholder="Pegue aquí el código PSeInt del Ejercicio 2..."></textarea>
+        <div class="rowbtn">
+          <button class="btnRevFila" type="button">Revisar fila</button>
+          <button class="btnCopiarRes" type="button">Copiar resultado</button>
+        </div>
+      </td>
+      <td><div class="res result"></div></td>
+      <td class="grade">—</td>
+    </tr>
+    <tr data-ej="3">
+      <td><b>Ejercicio 3</b><div class="enun" id="en3"></div></td>
+      <td>
+        <textarea class="code" placeholder="Pegue aquí el código PSeInt del Ejercicio 3..."></textarea>
+        <div class="rowbtn">
+          <button class="btnRevFila" type="button">Revisar fila</button>
+          <button class="btnCopiarRes" type="button">Copiar resultado</button>
+        </div>
+      </td>
+      <td><div class="res result"></div></td>
+      <td class="grade">—</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="panel">
+  <b>Nota final (promedio real de 3 ejercicios):</b>
+  <span id="notaFinal" style="font-weight:900;font-size:18px;">—</span>
+  <span class="muted"> (siempre (Ej1 + Ej2 + Ej3) / 3)</span>
+</div>
+
+<div class="panel">
+  <b>Relación con CTMM</b>
+  <div class="muted" style="font-size:12px;margin-top:6px;">
+    Nota ↔ CTMM: <b>1.0–2.9 → Nivel 1</b>, <b>3.0–3.9 → Nivel 2</b>, <b>4.0–5.0 → Nivel 3</b>.
+    “No aplica” si el ejercicio no evalúa esa habilidad.
+  </div>
+  <table style="margin-top:10px">
+    <thead>
+      <tr>
+        <th style="width:22%">Habilidad</th>
+        <th style="width:16%">Ej1</th>
+        <th style="width:16%">Ej2</th>
+        <th style="width:16%">Ej3</th>
+        <th style="width:30%">Global</th>
+      </tr>
+    </thead>
+    <tbody id="ctmmBody"></tbody>
+  </table>
+  <div style="margin-top:8px">
+    <b>Nivel global sugerido:</b> <span id="ctmmGlobal">—</span>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="panel">
+    <b>Observaciones del docente</b>
+    <textarea id="obs" style="min-height:210px" placeholder="Retroalimentación formativa..."></textarea>
+    <div class="rowbtn">
+      <button id="btnCopiarInforme" type="button">Copiar informe (texto)</button>
+      <button id="btnDescargarHTML" type="button">Descargar informe (HTML)</button>
+      <button id="btnDescargarJSONActual" type="button">Descargar JSON del grupo</button>
+    </div>
+    <div class="muted" style="font-size:12px;margin-top:6px;">
+      Comentario pedagógico (incluido): variables/tipos, mensaje inicial,
+      Mostrar/Escribir + Leer con “y presione ENTER:”, y restricciones del ejercicio.
+    </div>
+  </div>
+
+  <div class="panel">
+    <b>Grupos guardados</b> <span class="muted">(se muestran aunque localStorage esté bloqueado)</span>
+    <div class="rowbtn" style="margin-top:8px;">
+      <button id="btnExportarTodo" type="button">Exportar TODO (JSON)</button>
+      <button id="btnImportar" type="button">Importar JSON</button>
+      <button id="btnBorrarTodo" type="button">Borrar TODO</button>
+    </div>
+    <input id="fileImport" type="file" accept="application/json" style="display:none"/>
+    <div id="lista" class="muted" style="margin-top:10px;font-size:12px">No hay grupos guardados.</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ---------- Enunciados ----------
+  var EN = {
+    "1": "EJERCICIO 1. Clasificación del promedio académico\n\nLea la NOTA (0.0 a 5.0) y determine la CLASIFICACIÓN según rangos definidos por la pareja (con vacíos).\n\nDebe usar: Si – Sino Si – Sino.\nNo se permite el uso de ciclos.",
+    "2": "EJERCICIO 2. Valor a pagar con descuento\n\nLea el VALOR DE LA COMPRA y calcule DESCUENTO y VALOR FINAL según tabla definida por la pareja (con vacíos).\n\nDebe usar: Si – Sino Si – Sino.\nNo se permite el uso de ciclos.",
+    "3": "EJERCICIO 3. Clasificación por edad\n\nLea la EDAD y clasifíquela en categorías definidas por la pareja (con vacíos).\n\nDebe usar: Si anidados.\nDebe validar que la edad sea válida."
+  };
+  document.getElementById("en1").textContent = EN["1"];
+  document.getElementById("en2").textContent = EN["2"];
+  document.getElementById("en3").textContent = EN["3"];
+
+  function $(sel, root){ return (root||document).querySelector(sel); }
+  function $$(sel, root){ return Array.prototype.slice.call((root||document).querySelectorAll(sel)); }
+  function fmt(n){ return (Math.round(n*10)/10).toFixed(1); }
+  function now(){ return new Date().toLocaleString(); }
+  function escapeHtml(s){
+    s = (s==null) ? "" : String(s);
+    return s.replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; });
+  }
+  function pill(text, cls){ return '<span class="pill '+cls+'">'+text+'</span>'; }
+  function pillNivel(n){
+    if (n==="NA") return pill("No aplica","na");
+    if (n===1) return pill("Nivel 1","");
+    if (n===2) return pill("Nivel 2","");
+    return pill("Nivel 3","");
+  }
+  function copy(text){
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).catch(function(){ prompt("Copia:", text); });
+    } else prompt("Copia:", text);
+  }
+  function safeText(v){ return (v||"").replace(/\u00A0/g," ").replace(/\r\n/g,"\n").replace(/\r/g,"\n"); }
+  function linesOf(code){
+    code = safeText(code);
+    var raw = code.split("\n").map(function(l){
+      l = l.replace(/\t/g,"  ");
+      l = l.replace(/\s+$/,"");
+      var p = l.indexOf("//");
+      if (p>=0) l = l.substring(0,p);
+      return l.trim();
+    });
+    return raw.filter(function(l){ return l.length>0; });
+  }
+
+  // ---------- Storage: cache en memoria SIEMPRE ----------
+  var KEY="revisor_pseint_ctmm_clean_v2";
+  var storageOk = true;
+
+  function canLS(){
+    try{ localStorage.setItem("__t","1"); localStorage.removeItem("__t"); return true; }
+    catch(e){ return false; }
+  }
+  function loadFromStorage(){
+    if (!canLS()) return null;
+    try{
+      var raw = localStorage.getItem(KEY);
+      return raw ? JSON.parse(raw) : [];
+    }catch(e){ return null; }
+  }
+  function saveToStorage(arr){
+    if (!canLS()) throw new Error("localStorage bloqueado.");
+    localStorage.setItem(KEY, JSON.stringify(arr));
+  }
+  var groupsCache = (function(){
+    var g = loadFromStorage();
+    if (g===null){ storageOk=false; return []; }
+    return Array.isArray(g)?g:[];
+  })();
+
+  function showBannerIfNeeded(){
+    var b = document.getElementById("storageBanner");
+    if (!storageOk){
+      b.style.display="block";
+      b.innerHTML = "<b class='warn'>Aviso:</b> El navegador está bloqueando el almacenamiento (localStorage). "+
+        "Aun así, los grupos se mostrarán mientras esta pestaña esté abierta. "+
+        "Para conservarlos entre PCs, use <b>Exportar TODO (JSON)</b>.";
+    } else {
+      b.style.display="none";
+    }
+  }
+
+  function syncStorage(){
+    try{
+      saveToStorage(groupsCache);
+      storageOk = true;
+    }catch(e){
+      storageOk = false;
+    }
+    showBannerIfNeeded();
+  }
+
+  // ---------- Reglas ----------
+  function hasAlgStructure(lines){
+    var start=false, end=false;
+    for (var i=0;i<lines.length;i++){
+      var l = lines[i].toLowerCase();
+      if (l.startsWith("algoritmo ") || l.startsWith("proceso ")) start=true;
+      if (l.startsWith("finalgoritmo") || l.startsWith("finproceso")) end=true;
+    }
+    if (start && end) return {ok:true, msg:"Estructura Algoritmo/FinAlgoritmo detectada."};
+    if (start || end) return {ok:false, msg:"Estructura parcial (posible copia incompleta)."};
+    return {ok:false, msg:"No se detectó Algoritmo/Proceso (posible falta de encabezado)."};
+  }
+
+  function findDefinir(lines){
+    var re = /^definir\s+(.+?)\s+como\s+(entero|real|caracter|logico)\s*$/i;
+    var found=0;
+    for (var i=0;i<lines.length;i++){
+      var m = lines[i].match(re);
+      if (m) found += m[1].split(",").map(function(x){return x.trim();}).filter(Boolean).length;
+    }
+    return found;
+  }
+
+  function hasInitialObjective(lines){
+    var limit = Math.min(lines.length, 12);
+    for (var i=0;i<limit;i++){
+      var l = lines[i].toLowerCase();
+      if (l.startsWith("mostrar ") || l.startsWith("escribir ")){
+        if (l.length>=10) return true;
+      }
+      if (l.startsWith("leer ")) break;
+    }
+    return false;
+  }
+
+  function checkReadPromptRule(lines){
+    var probs=[];
+    for (var i=0;i<lines.length;i++){
+      var l = lines[i].toLowerCase();
+      if (!l.startsWith("leer ")) continue;
+
+      var prev = (i>0) ? lines[i-1] : "";
+      var prevLow = prev.toLowerCase();
+      if (!(prevLow.startsWith("mostrar ") || prevLow.startsWith("escribir "))){
+        probs.push("Leer (línea "+(i+1)+") sin Mostrar/Escribir inmediatamente anterior.");
+        continue;
+      }
+      var msg = prev.replace(/^(Mostrar|Escribir)\s+/i,"").trim();
+      msg = msg.replace(/^["“]/,"").replace(/["”]$/,"").trim();
+      var msgLow = msg.toLowerCase();
+      if (msgLow.indexOf("y presione enter:")===-1){
+        probs.push('Mensaje antes de Leer (línea '+i+') no contiene "y presione ENTER:".');
+      }
+      if (!msg.trim().endsWith(":")){
+        probs.push('Mensaje antes de Leer (línea '+i+') debe terminar con ":"');
+      }
+    }
+    var anyLeer = lines.some(function(x){ return x.toLowerCase().startsWith("leer "); });
+    if (!anyLeer) probs.push("No se detectaron instrucciones Leer para entradas.");
+    return {ok: probs.length===0, probs:probs};
+  }
+
+  function hasLoops(lines){
+    for (var i=0;i<lines.length;i++){
+      var l = lines[i].toLowerCase();
+      if (l.startsWith("para ") || l.startsWith("mientras ") || l.startsWith("repetir")) return true;
+    }
+    return false;
+  }
+  function hasIf(lines){ return lines.some(function(l){ return l.toLowerCase().startsWith("si "); }); }
+  function hasElse(lines){
+    return lines.some(function(l){
+      var x=l.toLowerCase();
+      return x.startsWith("sino") || x.startsWith("sino si");
+    });
+  }
+  function nestedIfApprox(lines){
+    var c=0;
+    for (var i=0;i<lines.length;i++) if (lines[i].toLowerCase().startsWith("si ")) c++;
+    return c>=2;
+  }
+  function hasAgeValidation(lines){
+    var joined = lines.join(" ").toLowerCase();
+    return joined.indexOf("edad")!==-1 &&
+      (joined.indexOf("< 0")!==-1 || joined.indexOf("<= 0")!==-1 || joined.indexOf("inval")!==-1 || joined.indexOf("no valida")!==-1 || joined.indexOf("no válida")!==-1);
+  }
+  function hasSubprogram(lines){
+    return lines.some(function(l){
+      var x=l.toLowerCase();
+      return x.startsWith("subproceso ") || x.startsWith("funcion ");
+    });
+  }
+
+  function gradeFromChecks(c){
+    var p=0;
+    if (c.vars) p++;
+    if (c.obj) p++;
+    if (c.prompts) p++;
+    if (c.ejRules) p++;
+    return Math.max(1, Math.min(5, 1 + (p/4)*4));
+  }
+  function ctmmLevelFromGrade(g){
+    if (g < 3.0) return 1;
+    if (g < 4.0) return 2;
+    return 3;
+  }
+  function ctmmForExercise(ej, codeLines, grade){
+    var lvl = ctmmLevelFromGrade(grade);
+    var abs = lvl;
+    var log = lvl;
+    var des = hasSubprogram(codeLines) ? lvl : "NA";
+    var joined = codeLines.join(" ").toLowerCase();
+    var depApplies = (parseInt(ej,10)===3) || hasAgeValidation(codeLines) || joined.indexOf("error")!==-1 || joined.indexOf("verifique")!==-1;
+    var dep = depApplies ? lvl : "NA";
+    return {"Abstracción":abs,"Descomposición":des,"Pensamiento lógico/algorítmico":log,"Depuración":dep};
+  }
+
+  function ctmmAggregate(rows){
+    var skills = ["Abstracción","Descomposición","Pensamiento lógico/algorítmico","Depuración"];
+    var global = {};
+    skills.forEach(function(sk){
+      var vals=[];
+      rows.forEach(function(r){ if (r.ctmm[sk] !== "NA") vals.push(r.ctmm[sk]); });
+      if (!vals.length){ global[sk]="NA"; return; }
+      var sum=vals.reduce(function(a,b){return a+b;},0);
+      var m=Math.round(sum/vals.length);
+      global[sk]=Math.max(1,Math.min(3,m));
+    });
+    var o = skills.map(function(sk){return global[sk];}).filter(function(v){return v!=="NA";});
+    var overall = o.length ? Math.round(o.reduce(function(a,b){return a+b;},0)/o.length) : "NA";
+    return {global:global, overall:overall};
+  }
+
+  function updateCTMMUI(rows){
+    var agg = ctmmAggregate(rows);
+    var skills = ["Abstracción","Descomposición","Pensamiento lógico/algorítmico","Depuración"];
+    var body = document.getElementById("ctmmBody");
+    body.innerHTML="";
+    skills.forEach(function(sk){
+      var tr=document.createElement("tr");
+      tr.innerHTML =
+        "<td><b>"+escapeHtml(sk)+"</b></td>"+
+        "<td>"+pillNivel(rows[0].ctmm[sk])+"</td>"+
+        "<td>"+pillNivel(rows[1].ctmm[sk])+"</td>"+
+        "<td>"+pillNivel(rows[2].ctmm[sk])+"</td>"+
+        "<td>"+pillNivel(agg.global[sk])+"</td>";
+      body.appendChild(tr);
+    });
+    var g = document.getElementById("ctmmGlobal");
+    g.innerHTML = (agg.overall==="NA") ? pill("No aplica","na") : pillNivel(agg.overall)+" <span class='muted'>(sugerido)</span>";
+  }
+
+  function reviewRow(tr){
+    var ej = tr.getAttribute("data-ej");
+    var code = $(".code", tr).value || "";
+    var L = linesOf(code);
+
+    if (!L.length){
+      $(".result", tr).textContent = "Sin código.";
+      $(".grade", tr).textContent = "1.0";
+      tr.dataset.grade = "1.0";
+      tr.__ctmm = {"Abstracción":1,"Descomposición":"NA","Pensamiento lógico/algorítmico":1,"Depuración":"NA"};
+      tr.__report = "Sin código.";
+      return;
+    }
+
+    var struct = hasAlgStructure(L);
+    var nDef = findDefinir(L);
+    var varsOK = nDef>0;
+    var objOK = hasInitialObjective(L);
+    var pr = checkReadPromptRule(L);
+    var promptsOK = pr.ok;
+
+    var ejRulesOK = true;
+    var ejMsg = [];
+    if (ej==="1" || ej==="2"){
+      if (hasLoops(L)){ ejRulesOK=false; ejMsg.push("Usa ciclos (NO permitido)."); }
+      if (!hasIf(L)){ ejRulesOK=false; ejMsg.push("No se detectó 'Si ... Entonces'."); }
+      if (!hasElse(L)){ ejRulesOK=false; ejMsg.push("No se detectó 'Sino / Sino Si'."); }
+    }
+    if (ej==="3"){
+      if (!nestedIfApprox(L)){ ejRulesOK=false; ejMsg.push("No se detectan Si anidados (>=2 'Si')."); }
+      if (!hasAgeValidation(L)){ ejRulesOK=false; ejMsg.push("No se detecta validación de edad (heurística)."); }
+    }
+
+    var grade = gradeFromChecks({vars:varsOK,obj:objOK,prompts:promptsOK,ejRules:ejRulesOK});
+
+    var out=[];
+    out.push("EJERCICIO "+ej);
+    out.push("");
+    out.push((struct.ok?"✔":"✖")+" Estructura: "+struct.msg);
+    out.push((varsOK?"✔":"✖")+" Regla 1 (Variables): "+(varsOK?("Se detectó Definir (variables: "+nDef+")."):"No se detectó Definir ... Como ..."));
+    out.push((objOK?"✔":"✖")+" Regla 2 (Mensaje inicial): "+(objOK?"Hay Mostrar/Escribir inicial (objetivo).":"No hay Mostrar/Escribir inicial (objetivo)."));
+    if (promptsOK) out.push("✔ Reglas 3–4 (Prompts): Mostrar/Escribir antes de Leer con “y presione ENTER:” y ':'");
+    else {
+      out.push("✖ Reglas 3–4 (Prompts):");
+      pr.probs.forEach(function(p){ out.push("  - "+p); });
+    }
+    out.push((ejRulesOK?"✔":"✖")+" Reglas del ejercicio: "+(ejRulesOK?"Cumple (heurística).":ejMsg.join(" ")));
+    out.push("");
+    out.push("NOTA PROPUESTA (1–5): "+fmt(grade));
+
+    $(".result", tr).textContent = out.join("\n");
+    $(".grade", tr).textContent = fmt(grade);
+    tr.dataset.grade = String(grade);
+    tr.__ctmm = ctmmForExercise(ej, L, grade);
+    tr.__report = out.join("\n");
+  }
+
+  function getGrade(tr){
+    var g = parseFloat(tr.dataset.grade);
+    if (!isFinite(g)){
+      var t = $(".grade", tr).textContent.trim().replace(",",".");
+      g = parseFloat(t);
+    }
+    return isFinite(g) ? g : 1.0;
+  }
+
+  function updateFinalAndCTMM(){
+    var trs = $$("tbody tr");
+    var avg = (getGrade(trs[0])+getGrade(trs[1])+getGrade(trs[2]))/3;
+    document.getElementById("notaFinal").textContent = fmt(avg);
+
+    var rows = trs.map(function(tr){
+      return {
+        ej: tr.getAttribute("data-ej"),
+        grade: getGrade(tr),
+        ctmm: tr.__ctmm || {"Abstracción":1,"Descomposición":"NA","Pensamiento lógico/algorítmico":1,"Depuración":"NA"},
+        report: tr.__report || ""
+      };
+    });
+    updateCTMMUI(rows);
+    return {avg:avg, rows:rows};
+  }
+
+  // ---------- snapshots / export ----------
+  function safeFile(name){ return (name||"grupo").toLowerCase().replace(/[^a-z0-9]+/g,"_").slice(0,40); }
+  function downloadJSON(obj, filename){
+    var blob=new Blob([JSON.stringify(obj,null,2)],{type:"application/json"});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement("a"); a.href=url; a.download=filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function snapshotCurrent(){
+    var state=updateFinalAndCTMM();
+    var trs=$$("tbody tr");
+    var rows=trs.map(function(tr){
+      return {
+        ej: tr.getAttribute("data-ej"),
+        code: $(".code", tr).value || "",
+        result: $(".result", tr).textContent || "",
+        grade: fmt(getGrade(tr)),
+        ctmm: tr.__ctmm || {"Abstracción":1,"Descomposición":"NA","Pensamiento lógico/algorítmico":1,"Depuración":"NA"}
+      };
+    });
+    var id=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():String(Date.now())+Math.random().toString(16).slice(2);
+    return {
+      id:id,
+      grupo:(document.getElementById("grupo").value||"").trim()||"(Sin nombre)",
+      fecha:now(),
+      notaFinal:fmt(state.avg),
+      obs:document.getElementById("obs").value||"",
+      rows:rows
+    };
+  }
+
+  function loadSnapshot(s){
+    document.getElementById("grupo").value=s.grupo||"";
+    document.getElementById("obs").value=s.obs||"";
+    var trs=$$("tbody tr");
+    s.rows.forEach(function(r,i){
+      var tr=trs[i];
+      $(".code", tr).value=r.code||"";
+      $(".result", tr).textContent=r.result||"";
+      $(".grade", tr).textContent=r.grade||"—";
+      tr.dataset.grade=(r.grade||"").replace(",",".");
+      tr.__ctmm=r.ctmm||tr.__ctmm;
+      tr.__report=r.result||tr.__report;
+    });
+    updateFinalAndCTMM();
+  }
+
+  // ---------- Informe (texto + HTML para descarga/impresión) ----------
+  function buildReportText(s){
+    var t = "";
+    t += "INFORME GLOBAL – REVISOR DIDÁCTICO PSEINT\n\n";
+    t += "Grupo / Pareja: "+s.grupo+"\n";
+    t += "Fecha: "+s.fecha+"\n";
+    t += "Nota final (promedio real): "+s.notaFinal+"\n\n";
+    t += "RESUMEN\n";
+    s.rows.forEach(function(r){
+      t += "EJERCICIO "+r.ej+" — Nota: "+r.grade+"\n";
+      t += (r.result && r.result.trim()? r.result : "(Sin revisión)")+"\n\n";
+    });
+    t += "Comentario pedagógico\n";
+    t += "Se evalúa claridad del proceso: variables/tipos, mensaje inicial, Mostrar/Escribir antes de Leer con “y presione ENTER:”, y restricciones del ejercicio.\n\n";
+    t += "Observaciones del docente\n"+(s.obs && s.obs.trim()? s.obs : "(Sin observaciones)")+"\n";
+    return t;
+  }
+
+  function buildPrintHTML(s){
+    var rows=s.rows.map(function(r){
+      return "<tr><td style='width:18%;font-weight:700'>Ejercicio "+escapeHtml(r.ej)+"</td>"+
+             "<td style='white-space:pre-wrap;font-family:Consolas,monospace;font-size:10px'>"+escapeHtml(r.result||"")+"</td></tr>";
+    }).join("");
+    var skills=["Abstracción","Descomposición","Pensamiento lógico/algorítmico","Depuración"];
+    var ct=skills.map(function(sk){
+      function f(v){return v==="NA"?"No aplica":"Nivel "+v;}
+      return "<tr><td style='font-weight:700'>"+escapeHtml(sk)+"</td>"+
+        "<td>"+escapeHtml(f(s.rows[0].ctmm[sk]))+"</td>"+
+        "<td>"+escapeHtml(f(s.rows[1].ctmm[sk]))+"</td>"+
+        "<td>"+escapeHtml(f(s.rows[2].ctmm[sk]))+"</td></tr>";
+    }).join("");
+    return "<!doctype html><html><head><meta charset='utf-8'>"+
+      "<title>Informe - "+escapeHtml(s.grupo)+"</title>"+
+      "<style>@page{size:A4;margin:10mm}body{font-family:Arial;font-size:11px;line-height:1.15}"+
+      "h1{font-size:15px;margin:0 0 6px}h2{font-size:12px;margin:10px 0 6px}"+
+      "table{width:100%;border-collapse:collapse}td,th{border:1px solid #333;padding:5px;vertical-align:top}th{background:#f0f0f0;text-align:left}"+
+      "table, tr, td, th{page-break-inside:avoid}</style></head><body>"+
+      "<h1>INFORME – REVISOR DIDÁCTICO PSEINT</h1>"+
+      "<div><b>Grupo / Pareja:</b> "+escapeHtml(s.grupo)+"</div>"+
+      "<div><b>Fecha:</b> "+escapeHtml(s.fecha)+"</div>"+
+      "<div><b>Nota final (promedio real):</b> "+escapeHtml(s.notaFinal)+"</div>"+
+      "<h2>Resumen de revisión</h2>"+
+      "<table><thead><tr><th>EJERCICIO</th><th>RESULTADO DE LA REVISIÓN</th></tr></thead><tbody>"+rows+"</tbody></table>"+
+      "<h2>CTMM</h2>"+
+      "<table><thead><tr><th>Habilidad</th><th>Ej1</th><th>Ej2</th><th>Ej3</th></tr></thead><tbody>"+ct+"</tbody></table>"+
+      "<h2>Observaciones</h2><div style='white-space:pre-wrap'>"+escapeHtml(s.obs||"")+"</div>"+
+      "</body></html>";
+  }
+
+  function downloadHTMLReport(s){
+    var blob=new Blob([buildPrintHTML(s)],{type:"text/html"});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement("a");
+    a.href=url;
+    a.download="informe_"+safeFile(s.grupo)+"_"+s.id+".html";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // PDF: estrategia 1 (nueva pestaña) + fallback (misma pestaña)
+  function printPDF(s){
+    var html = buildPrintHTML(s);
+    var w = null;
+    try{
+      w = window.open("", "_blank");
+    }catch(e){ w=null; }
+    if (w){
+      w.document.open();
+      w.document.write(html);
+      w.document.close();
+      setTimeout(function(){ w.focus(); w.print(); }, 350);
+      return;
+    }
+    // fallback: descarga HTML (para que el docente lo abra y lo imprima)
+    alert("El navegador bloqueó la ventana emergente para imprimir.\nSe descargará el informe en HTML para que lo abras y lo imprimas como PDF.");
+    downloadHTMLReport(s);
+  }
+
+  // ---------- Lista de grupos (SIEMPRE desde cache) ----------
+  function renderList(){
+    var list=document.getElementById("lista");
+    if(!groupsCache.length){ list.textContent="No hay grupos guardados."; return; }
+
+    var html="<table><thead><tr><th>Grupo</th><th>Fecha</th><th>Nota</th><th>Acciones</th></tr></thead><tbody>";
+    groupsCache.forEach(function(g){
+      html+="<tr>";
+      html+="<td><b>"+escapeHtml(g.grupo)+"</b></td>";
+      html+="<td class='muted'>"+escapeHtml(g.fecha)+"</td>";
+      html+="<td class='grade'>"+escapeHtml(g.notaFinal)+"</td>";
+      html+="<td><div class='rowbtn'>"+
+        "<button type='button' class='bCargar' data-id='"+escapeHtml(g.id)+"'>Cargar</button>"+
+        "<button type='button' class='bPDF' data-id='"+escapeHtml(g.id)+"'>PDF</button>"+
+        "<button type='button' class='bHTML' data-id='"+escapeHtml(g.id)+"'>HTML</button>"+
+        "<button type='button' class='bJSON' data-id='"+escapeHtml(g.id)+"'>JSON</button>"+
+        "<button type='button' class='bDel' data-id='"+escapeHtml(g.id)+"'>Eliminar</button>"+
+      "</div></td>";
+      html+="</tr>";
+    });
+    html+="</tbody></table>";
+    list.innerHTML=html;
+
+    $$(".bCargar").forEach(function(b){
+      b.onclick=function(){
+        var id=b.getAttribute("data-id");
+        var g=groupsCache.find(function(x){return x.id===id;});
+        if(g) loadSnapshot(g);
+      };
+    });
+    $$(".bPDF").forEach(function(b){
+      b.onclick=function(){
+        var id=b.getAttribute("data-id");
+        var g=groupsCache.find(function(x){return x.id===id;});
+        if(g) printPDF(g);
+      };
+    });
+    $$(".bHTML").forEach(function(b){
+      b.onclick=function(){
+        var id=b.getAttribute("data-id");
+        var g=groupsCache.find(function(x){return x.id===id;});
+        if(g) downloadHTMLReport(g);
+      };
+    });
+    $$(".bJSON").forEach(function(b){
+      b.onclick=function(){
+        var id=b.getAttribute("data-id");
+        var g=groupsCache.find(function(x){return x.id===id;});
+        if(g) downloadJSON(g, "grupo_"+safeFile(g.grupo)+"_"+id+".json");
+      };
+    });
+    $$(".bDel").forEach(function(b){
+      b.onclick=function(){
+        var id=b.getAttribute("data-id");
+        groupsCache = groupsCache.filter(function(x){return x.id!==id;});
+        syncStorage();
+        renderList();
+      };
+    });
+  }
+
+  // ---------- Auto-revisión ----------
+  var timers=new WeakMap();
+  function debounce(tr, ms){
+    var old=timers.get(tr); if(old) clearTimeout(old);
+    var t=setTimeout(function(){ reviewRow(tr); updateFinalAndCTMM(); }, ms);
+    timers.set(tr,t);
+  }
+  $$("tbody tr").forEach(function(tr){
+    var ta=$(".code", tr);
+    ta.addEventListener("paste", function(){ debounce(tr, 60); });
+    ta.addEventListener("input", function(){ debounce(tr, 350); });
+  });
+
+  // ---------- Botones ----------
+  $$(".btnRevFila").forEach(function(b){
+    b.onclick=function(){ var tr=b.closest("tr"); reviewRow(tr); updateFinalAndCTMM(); };
+  });
+  $$(".btnCopiarRes").forEach(function(b){
+    b.onclick=function(){ var tr=b.closest("tr"); copy(tr.__report || "(Primero revisa la fila.)"); };
+  });
+
+  document.getElementById("btnRevisarTodo").onclick=function(){
+    $$("tbody tr").forEach(function(tr){ reviewRow(tr); });
+    updateFinalAndCTMM();
+  };
+
+  document.getElementById("btnCopiarInforme").onclick=function(){
+    $$("tbody tr").forEach(function(tr){ if(!tr.__report) reviewRow(tr); });
+    var s=snapshotCurrent();
+    copy(buildReportText(s));
+  };
+
+  document.getElementById("btnDescargarHTML").onclick=function(){
+    $$("tbody tr").forEach(function(tr){ if(!tr.__report) reviewRow(tr); });
+    downloadHTMLReport(snapshotCurrent());
+  };
+
+  document.getElementById("btnDescargarJSONActual").onclick=function(){
+    $$("tbody tr").forEach(function(tr){ if(!tr.__report) reviewRow(tr); });
+    var s=snapshotCurrent();
+    downloadJSON(s, "grupo_"+safeFile(s.grupo)+"_"+s.id+".json");
+  };
+
+  document.getElementById("btnPDFActual").onclick=function(){
+    $$("tbody tr").forEach(function(tr){ if(!tr.__report) reviewRow(tr); });
+    printPDF(snapshotCurrent());
+  };
+
+  document.getElementById("btnGuardarGrupo").onclick=function(){
+    $$("tbody tr").forEach(function(tr){ if(!tr.__report) reviewRow(tr); });
+    var s=snapshotCurrent();
+    groupsCache.unshift(s);
+    syncStorage();
+    renderList();
+  };
+
+  document.getElementById("btnLimpiar").onclick=function(){
+    document.getElementById("grupo").value="";
+    document.getElementById("obs").value="";
+    $$("tbody tr").forEach(function(tr){
+      $(".code", tr).value="";
+      $(".result", tr).textContent="";
+      $(".grade", tr).textContent="—";
+      tr.dataset.grade="";
+      tr.__ctmm=null;
+      tr.__report=null;
+    });
+    document.getElementById("notaFinal").textContent="—";
+    updateFinalAndCTMM();
+  };
+
+  document.getElementById("btnExportarTodo").onclick=function(){
+    downloadJSON(groupsCache, "grupos_revisor_pseint.json");
+  };
+
+  document.getElementById("btnImportar").onclick=function(){
+    document.getElementById("fileImport").click();
+  };
+
+  document.getElementById("fileImport").addEventListener("change", function(ev){
+    var f=ev.target.files && ev.target.files[0]; if(!f) return;
+    var r=new FileReader();
+    r.onload=function(){
+      try{
+        var data=JSON.parse(r.result);
+        if(!Array.isArray(data)) throw new Error("El JSON debe ser una lista de grupos.");
+        for(var i=data.length-1;i>=0;i--) groupsCache.unshift(data[i]);
+        syncStorage();
+        renderList();
+      }catch(e){
+        alert("Error importando: "+e);
+      }finally{
+        document.getElementById("fileImport").value="";
+      }
+    };
+    r.readAsText(f,"utf-8");
+  });
+
+  document.getElementById("btnBorrarTodo").onclick=function(){
+    if(!confirm("¿Borrar TODOS los grupos guardados?")) return;
+    groupsCache = [];
+    try{ localStorage.removeItem(KEY); }catch(e){}
+    syncStorage();
+    renderList();
+  };
+
+  // ---------- Init ----------
+  showBannerIfNeeded();
+  updateFinalAndCTMM();
+  renderList();
+})();
+</script>
+
+</body>
+</html>
